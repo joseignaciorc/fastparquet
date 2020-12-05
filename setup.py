@@ -75,7 +75,6 @@ setup(
     setup_requires=[
         'pytest-runner',
         'oldest-supported-numpy',
-        'numpy'
     ],
     extras_require={
         'brotli': ['brotli'],

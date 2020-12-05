@@ -2,6 +2,7 @@
 
 import os
 import sys
+
 try:
     from setuptools import setup, Extension
     from setuptools.command.build_ext import build_ext as _build_ext
@@ -9,11 +10,13 @@ except ImportError:
     from distutils.core import setup, Extension
     from distutils.command.build_ext import build_ext as _build_ext
 
+
+setup_additional_reqs = []
 try:
     import numpy
-    setup_additional_reqs=[]
+    assert tuple(map(int, (numpy.__version__.split(".")))) > (1, 11, 0)
 except ImportError:
-    setup_additional_reqs=[ 'oldest-supported-numpy']
+    setup_additional_reqs = ["oldest-supported-numpy"]
 
 
 # Kudos to https://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py/21621689
@@ -27,77 +30,81 @@ class build_ext(_build_ext):
         # Prevent numpy from thinking it is still in its setup process:
         builtins.__NUMPY_SETUP__ = False
         import numpy
+
         self.include_dirs.append(numpy.get_include())
 
 
-allowed = ('--help-commands', '--version', 'egg_info', 'clean')
-if len(sys.argv) >= 2 and ('--help' in sys.argv[1:] or sys.argv[1] in allowed):
+allowed = ("--help-commands", "--version", "egg_info", "clean")
+if len(sys.argv) >= 2 and ("--help" in sys.argv[1:] or sys.argv[1] in allowed):
     # NumPy and cython are not required for these actions. They must succeed
     # so pip can install fastparquet when these requirements are not available.
     extra = {}
 else:
-    modules_to_build = {
-        'fastparquet.speedups': ['fastparquet/speedups.pyx']
-    }
+    modules_to_build = {"fastparquet.speedups": ["fastparquet/speedups.pyx"]}
     try:
         from Cython.Build import cythonize
+
         def fix_exts(sources):
             return sources
+
     except ImportError:
+
         def cythonize(modules, language_level):
             return modules
+
         def fix_exts(sources):
-            return [s.replace('.pyx', '.c') for s in sources]
+            return [s.replace(".pyx", ".c") for s in sources]
 
     modules = [
-        Extension(mod, fix_exts(sources))
-        for mod, sources in modules_to_build.items()]
-    extra = {'ext_modules': cythonize(modules, language_level=3)}
+        Extension(mod, fix_exts(sources)) for mod, sources in modules_to_build.items()
+    ]
+    extra = {"ext_modules": cythonize(modules, language_level=3)}
 
-install_requires = open('requirements.txt').read().strip().split('\n')
+install_requires = open("requirements.txt").read().strip().split("\n")
 
 setup(
-    name='fastparquet',
-    version='0.4.1',
-    description='Python support for Parquet file format',
-    author='Martin Durant',
-    author_email='mdurant@continuum.io',
-    url='https://github.com/dask/fastparquet/',
-    license='Apache License 2.0',
+    name="fastparquet",
+    version="0.4.1",
+    description="Python support for Parquet file format",
+    author="Martin Durant",
+    author_email="mdurant@continuum.io",
+    url="https://github.com/dask/fastparquet/",
+    license="Apache License 2.0",
     classifiers=[
-        'Development Status :: 3 - Alpha',
-        'Intended Audience :: Developers',
-        'Intended Audience :: System Administrators',
-        'License :: OSI Approved :: Apache Software License',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: Implementation :: CPython',
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "Intended Audience :: System Administrators",
+        "License :: OSI Approved :: Apache Software License",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: Implementation :: CPython",
     ],
-    packages=['fastparquet'],
-    cmdclass={'build_ext': build_ext},
+    packages=["fastparquet"],
+    cmdclass={"build_ext": build_ext},
     install_requires=install_requires,
-    setup_requires=['pytest-runner']+setup_additional_reqs,
+    setup_requires=["pytest-runner"] + setup_additional_reqs,
     extras_require={
-        'brotli': ['brotli'],
-        'lz4': ['lz4 >= 0.19.1'],
-        'lzo': ['python-lzo'],
-        'snappy': ['python-snappy'],
-        'zstandard': ['zstandard'],
-        'zstd': ['zstd'],
+        "brotli": ["brotli"],
+        "lz4": ["lz4 >= 0.19.1"],
+        "lzo": ["python-lzo"],
+        "snappy": ["python-snappy"],
+        "zstandard": ["zstandard"],
+        "zstd": ["zstd"],
     },
     tests_require=[
-        'pytest',
-        'python-snappy',
-        'lz4 >= 0.19.1',
-        'zstandard',
-        'zstd',
+        "pytest",
+        "python-snappy",
+        "lz4 >= 0.19.1",
+        "zstandard",
+        "zstd",
     ],
-    long_description=(open('README.rst').read() if os.path.exists('README.rst')
-                      else ''),
-    package_data={'fastparquet': ['*.thrift']},
+    long_description=(
+        open("README.rst").read() if os.path.exists("README.rst") else ""
+    ),
+    package_data={"fastparquet": ["*.thrift"]},
     include_package_data=True,
     python_requires=">=3.6,",
     **extra

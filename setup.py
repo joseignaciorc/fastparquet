@@ -9,6 +9,13 @@ except ImportError:
     from distutils.core import setup, Extension
     from distutils.command.build_ext import build_ext as _build_ext
 
+try:
+    import numpy
+    setup_additional_reqs=[]
+except ImportError:
+    setup_additional_reqs=[ 'oldest-supported-numpy']
+
+
 # Kudos to https://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py/21621689
 class build_ext(_build_ext):
     def finalize_options(self):
@@ -72,10 +79,7 @@ setup(
     packages=['fastparquet'],
     cmdclass={'build_ext': build_ext},
     install_requires=install_requires,
-    setup_requires=[
-        'pytest-runner',
-        'oldest-supported-numpy',
-    ],
+    setup_requires=['pytest-runner']+setup_additional_reqs,
     extras_require={
         'brotli': ['brotli'],
         'lz4': ['lz4 >= 0.19.1'],
